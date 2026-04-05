@@ -181,7 +181,7 @@ function ZoneScale({ value, zones, unit }: {
 
 // ── Simple scale (no named zones) ────────────────────────────────────────────
 
-function SimpleScale({ value, referenceRange, unit }: {
+function SimpleScale({ value, referenceRange, unit, status }: {
   value: number; referenceRange: string; unit: string; status: 'low' | 'high';
 }) {
   const { low, high } = parseBounds(referenceRange);
