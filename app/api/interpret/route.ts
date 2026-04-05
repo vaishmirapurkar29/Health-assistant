@@ -2,11 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
-import type { InterpretationResult } from '@/lib/types';
+import type { InterpretationResult, HistoryRecord } from '@/lib/types';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'data', 'uploads');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const HISTORY_FILE = path.join(process.cwd(), 'data', 'history.json');
+
+// Compact history summary for SmartTip trend analysis
+function buildHistoryContext(): string {
+  try {
+    if (!fs.existsSync(HISTORY_FILE)) return '';
+    const records = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8')) as HistoryRecord[];
+    if (records.length === 0) return '';
+    const lines = records.map(r => {
+      const markers = r.abnormalMarkers
+        .map(m => `${m.name}=${m.value}${m.unit}(${m.status})`)
+        .join(', ');
+      return `${r.patientName} | ${r.reportDate} | ${markers}`;
+    });
+    return 'PRIOR LAB HISTORY:\n' + lines.join('\n');
+  } catch {
+    return '';
+  }
+}
 
 const SYSTEM_PROMPT = `You are a health information assistant that interprets lab results in plain, supportive, non-diagnostic language.
 
@@ -109,6 +128,11 @@ export async function POST(request: NextRequest) {
       // Non-fatal — proceed without saving
     }
 
+    const historyContext = buildHistoryContext();
+    const historyNote = historyContext
+      ? `\n\n${historyContext}\n\nIf the patient in this report matches a patient in the history above AND there is a meaningful trend (a marker worsening or improving across reports, or related markers forming a pattern), generate a SmartTip describing that trend. Otherwise set smartTip to null.`
+      : '\n\nNo prior history available. Set smartTip to null.';
+
     const userContent: Anthropic.ContentBlockParam[] = [
       {
         type: 'document',
@@ -116,7 +140,7 @@ export async function POST(request: NextRequest) {
       } as Anthropic.ContentBlockParam,
       {
         type: 'text',
-        text: 'Extract and interpret all lab markers from this report. Return the full JSON interpretation with smartTip set to null.',
+        text: `Extract and interpret all lab markers from this report. Return the full JSON interpretation.${historyNote}`,
       },
     ];
 
