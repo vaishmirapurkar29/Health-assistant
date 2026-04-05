@@ -9,6 +9,20 @@ const SEVERITY_ORDER: Record<string, number> = {
   'Mild': 2,
 };
 
+// Returns true if value is strictly outside the printed reference range
+function isOutOfRange(value: string, referenceRange: string): boolean {
+  const num = parseFloat(value);
+  if (isNaN(num)) return false;
+  const s = referenceRange.trim();
+  const gt = s.match(/^>=?\s*([\d.]+)/);
+  if (gt) return num < parseFloat(gt[1]);
+  const lt = s.match(/^<=?\s*([\d.]+)/);
+  if (lt) return num > parseFloat(lt[1]);
+  const range = s.match(/^([\d.]+)\s*[-–to]+\s*([\d.]+)/);
+  if (range) return num < parseFloat(range[1]) || num > parseFloat(range[2]);
+  return false;
+}
+
 interface Props {
   result: InterpretationResult;
   onReset: () => void;
@@ -18,9 +32,15 @@ export default function ResultsPage({ result, onReset }: Props) {
   const { abnormalMarkers, normalMarkerNames, summary, smartTip } = result;
 
 
-  const sorted = [...abnormalMarkers].sort(
-    (a, b) => (SEVERITY_ORDER[a.severity] ?? 3) - (SEVERITY_ORDER[b.severity] ?? 3)
-  );
+  const sorted = [...abnormalMarkers].sort((a, b) => {
+    // Group 1: strictly outside reference range
+    // Group 2: within range but clinically flagged
+    const aGroup = isOutOfRange(a.value, a.referenceRange) ? 0 : 1;
+    const bGroup = isOutOfRange(b.value, b.referenceRange) ? 0 : 1;
+    if (aGroup !== bGroup) return aGroup - bGroup;
+    // Within each group, sort by severity
+    return (SEVERITY_ORDER[a.severity] ?? 3) - (SEVERITY_ORDER[b.severity] ?? 3);
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-5">
