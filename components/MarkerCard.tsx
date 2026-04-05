@@ -5,19 +5,43 @@ interface Props {
   marker: MarkerInterpretation;
 }
 
-const statusChip: Record<string, string> = {
-  high: 'bg-gray-100 text-gray-600 border border-gray-200',
-  low: 'bg-gray-100 text-gray-600 border border-gray-200',
-};
+// Same palette as ScaleBar
+const ZONE_CHIP = [
+  'bg-emerald-200 text-emerald-800',
+  'bg-green-100 text-green-800',
+  'bg-yellow-100 text-yellow-800',
+  'bg-orange-100 text-orange-800',
+  'bg-red-100 text-red-800',
+  'bg-red-200 text-red-900',
+];
+
+function activeZoneChip(marker: MarkerInterpretation): { label: string; colorClass: string } {
+  const val = parseFloat(marker.value);
+  if (marker.zones && marker.zones.length > 0 && !isNaN(val)) {
+    const idx = marker.zones.findIndex(z =>
+      (z.min === null || val >= z.min) && (z.max === null || val < z.max)
+    );
+    if (idx >= 0) {
+      const colorIdx = marker.zones.length === 1 ? 0
+        : Math.round((idx / (marker.zones.length - 1)) * (ZONE_CHIP.length - 1));
+      return { label: marker.zones[idx].label, colorClass: ZONE_CHIP[colorIdx] };
+    }
+  }
+  return {
+    label: marker.status === 'high' ? 'Above range' : 'Below range',
+    colorClass: marker.status === 'high' ? 'bg-red-200 text-red-900' : 'bg-orange-100 text-orange-800',
+  };
+}
 
 export default function MarkerCard({ marker }: Props) {
+  const chip = activeZoneChip(marker);
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${statusChip[marker.status]}`}>
-            {marker.status === 'high' ? 'High' : 'Low'}
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${chip.colorClass}`}>
+            {chip.label}
           </span>
           <p className="font-semibold text-gray-900 text-sm">{marker.name}</p>
           <p className="text-xs font-semibold text-gray-500">

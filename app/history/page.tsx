@@ -5,11 +5,33 @@ import Link from 'next/link';
 import NavHeader from '@/components/NavHeader';
 import type { HistoryRecord } from '@/lib/types';
 
-const severityColor: Record<string, string> = {
-  'Needs attention': 'bg-red-100 text-red-700',
-  'Moderate': 'bg-orange-100 text-orange-700',
-  'Mild': 'bg-orange-50 text-orange-500',
-};
+// Same palette as ScaleBar zone colors
+const ZONE_BADGE = [
+  'bg-emerald-200 text-emerald-800',
+  'bg-green-100 text-green-800',
+  'bg-yellow-100 text-yellow-800',
+  'bg-orange-100 text-orange-800',
+  'bg-red-100 text-red-800',
+  'bg-red-200 text-red-900',
+];
+
+type BadgeMarker = HistoryRecord['abnormalMarkers'][number];
+
+function markerBadge(m: BadgeMarker): { color: string; label: string } {
+  const val = parseFloat(m.value);
+  if (m.zones && m.zones.length > 0 && !isNaN(val)) {
+    const activeIdx = m.zones.findIndex(z =>
+      (z.min === null || val >= z.min) && (z.max === null || val < z.max)
+    );
+    if (activeIdx >= 0) {
+      const colorIdx = m.zones.length === 1 ? 0
+        : Math.round((activeIdx / (m.zones.length - 1)) * (ZONE_BADGE.length - 1));
+      return { color: ZONE_BADGE[colorIdx], label: m.zones[activeIdx].label };
+    }
+  }
+  // No zones — use out-of-range color + High/Low label
+  return { color: 'bg-orange-100 text-orange-800', label: m.status === 'high' ? 'High' : 'Low' };
+}
 
 function groupByPatient(records: HistoryRecord[]): Record<string, HistoryRecord[]> {
   return records.reduce<Record<string, HistoryRecord[]>>((acc, r) => {
@@ -104,14 +126,17 @@ export default function HistoryPage() {
                       {/* Abnormal markers */}
                       {record.abnormalMarkers.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
-                          {record.abnormalMarkers.map((m) => (
-                            <span
-                              key={m.name}
-                              className={`text-xs font-medium px-2.5 py-1 rounded-full ${severityColor[m.severity]}`}
-                            >
-                              {m.name} · {m.status === 'high' ? '↑' : '↓'} {m.value} {m.unit}
-                            </span>
-                          ))}
+                          {record.abnormalMarkers.map((m) => {
+                            const { color, label } = markerBadge(m);
+                            return (
+                              <span
+                                key={m.name}
+                                className={`text-xs font-medium px-2.5 py-1 rounded-full ${color}`}
+                              >
+                                {m.name} · {m.value} {m.unit} · {label}
+                              </span>
+                            );
+                          })}
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">

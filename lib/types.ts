@@ -54,7 +54,7 @@ export interface HistoryRecord {
   savedAt: string;           // ISO datetime of when it was saved
   patientName: string;
   reportDate: string;
-  abnormalMarkers: Pick<MarkerInterpretation, 'name' | 'status' | 'severity' | 'value' | 'unit'>[];
+  abnormalMarkers: Pick<MarkerInterpretation, 'name' | 'status' | 'severity' | 'value' | 'unit' | 'zones' | 'referenceRange'>[];
   normalMarkerNames: string[];
   summary: OverallSummary;
   smartTip: SmartTip | null;
