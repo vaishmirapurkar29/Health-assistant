@@ -44,6 +44,8 @@ export default function Home() {
             severity: m.severity,
             value: m.value,
             unit: m.unit,
+            zones: m.zones,
+            referenceRange: m.referenceRange,
           })),
           normalMarkerNames: data.normalMarkerNames,
           summary: data.summary,

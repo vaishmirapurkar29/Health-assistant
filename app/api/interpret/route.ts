@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
 import type { InterpretationResult, HistoryRecord } from '@/lib/types';
+import { getStandardZones } from '@/lib/standardZones';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'data', 'uploads');
 
@@ -160,6 +161,11 @@ export async function POST(request: NextRequest) {
     let result: InterpretationResult;
     try {
       result = JSON.parse(cleaned);
+      // Apply standard zones for known markers — ensures consistency across uploads
+      result.abnormalMarkers = result.abnormalMarkers.map(m => ({
+        ...m,
+        zones: getStandardZones(m.name) ?? m.zones,
+      }));
     } catch {
       console.error('Failed to parse Claude response (length=' + cleaned.length + ', stop_reason=' + response.stop_reason + '):', cleaned.slice(-300));
       const hint = response.stop_reason === 'max_tokens' ? ' Response was too long — try again.' : '';
