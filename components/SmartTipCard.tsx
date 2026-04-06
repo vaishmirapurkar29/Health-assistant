@@ -28,7 +28,7 @@ export default function SmartTipCard({ tip }: Props) {
           <p className="text-teal-700">{tip.action}</p>
         </div>
 
-        <p className="text-teal-600 italic">{tip.doctorPrompt}</p>
+
       </div>
     </div>
   );
