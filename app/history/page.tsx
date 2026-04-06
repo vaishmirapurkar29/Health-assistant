@@ -29,8 +29,11 @@ function markerBadge(m: BadgeMarker): { color: string; label: string } {
       return { color: ZONE_BADGE[colorIdx], label: m.zones[activeIdx].label };
     }
   }
-  // No zones — use out-of-range color + High/Low label
-  return { color: 'bg-orange-100 text-orange-800', label: m.status === 'high' ? 'High' : 'Low' };
+  // No zones — use out-of-range color + Above/Below range label
+  return {
+    color: m.status === 'high' ? 'bg-red-200 text-red-900' : 'bg-orange-100 text-orange-800',
+    label: m.status === 'high' ? 'Above range' : 'Below range',
+  };
 }
 
 function groupByPatient(records: HistoryRecord[]): Record<string, HistoryRecord[]> {
