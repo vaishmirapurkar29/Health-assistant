@@ -1,3 +1,1 @@
-This is an assistant that takes in a pdf of your labs and interprets it with an easy to follow UX. This UX gives a quick summary and highlights values that are outright abnormal or near the boundary on a readable, color coded scale that gives the user an understanding of the severity. 
-The results also describe what the test means and what the user can do to fix the issue. There is also a humane tip at the bottom to reassure the user.
-There is a smart tip as well which highlights severity further, if required, based on the user's lab history. 
+An assistant that analyzes lab PDFs and presents results through a clear, user friendly interface. It highlights abnormal or borderline values on a color coded scale, explains what each test means, and suggests actionable steps. It also includes a reassuring note and a personalized insight based on the user’s lab history when relevant.
