@@ -26,7 +26,10 @@ function markerBadge(m: BadgeMarker): { color: string; label: string } {
     if (activeIdx >= 0) {
       const colorIdx = m.zones.length === 1 ? 0
         : Math.round((activeIdx / (m.zones.length - 1)) * (ZONE_BADGE.length - 1));
-      return { color: ZONE_BADGE[colorIdx], label: m.zones[activeIdx].label };
+      const z = m.zones[activeIdx];
+      const nearBoundary = z.max !== null && (z.max - val) / z.max < 0.15;
+      const label = nearBoundary ? `${z.label} · near limit` : z.label;
+      return { color: ZONE_BADGE[colorIdx], label };
     }
   }
   // No zones — use out-of-range color + Above/Below range label

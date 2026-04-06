@@ -24,7 +24,10 @@ function activeZoneChip(marker: MarkerInterpretation): { label: string; colorCla
     if (idx >= 0) {
       const colorIdx = marker.zones.length === 1 ? 0
         : Math.round((idx / (marker.zones.length - 1)) * (ZONE_CHIP.length - 1));
-      return { label: marker.zones[idx].label, colorClass: ZONE_CHIP[colorIdx] };
+      const z = marker.zones[idx];
+      const nearBoundary = z.max !== null && (z.max - val) / z.max < 0.15;
+      const label = nearBoundary ? `${z.label} · near limit` : z.label;
+      return { label, colorClass: ZONE_CHIP[colorIdx] };
     }
   }
   return {
